@@ -1,0 +1,78 @@
+软件包 文件位于/lamp下
+mkdir /lamp
+ncurses-5.6 
+mysql-5.1.59
+=========================================
+
+1 安装 ncurses 
+#cd /lamp/ncurses-5.6
+
+#./configure --with-shared --without-debug --without-ada --enable-overwrite
+*若不安装ncurses编译MySQL时会报错
+* --without-ada参数为设定不编译为ada绑定，因进入chroot环境不能使用ada ；
+*--enable-overwrite参数为定义把头文件安装到/tools/include下而不是/tools/include/ncurses目录
+
+//======================configure成功=======================================================
+** Configuration summary for NCURSES 5.6 20061217:
+
+     extended funcs: yes
+     xterm terminfo: xterm-new
+
+      bin directory: /usr/bin
+      lib directory: /usr/lib
+  include directory: /usr/include
+      man directory: /usr/man
+ terminfo directory: /usr/share/terminfo
+ 
+//=============================================================================
+
+#make 
+#make install
+
+****************************************************************
+2 安装MySQL
+
+#useradd mysql
+*添加mysql用户
+
+#cd  /lamp/mysql
+#./configure --prefix=/usr/local/mysql --without-debug --enable-thread-safe-client --with-pthread --enable-assembler --enable-profiling --with-mysqld-ldflags=-all-static --with-client-ldflags=-all-static --with-extra-charsets=all --with-plugins=all --with-mysqld-user=mysql --without-embedded-server --with-server-suffix=-community --with-unix-socket-path=/tmp/mysql.sock
+
+* --with-extra-charsets=all参数为安装所有字符集
+*如果不行的话,make clean 后再make ;make install,这样去试一下,默认是不支持innodb存储引擎的.
+*其中--with-plugins=all可以把innodb加载进来
+
+#make 
+#make install
+
+*修改mysql配置文件my.cnf
+#cp /usr/local/mysql/share/mysql/my-medium.cnf   /etc/my.cnf
+1.[client]
+default-character-set=utf8
+#客户端字符集
+#连接字符集
+2.[ mysqld]
+character-set-server = utf8
+#服务器字符集
+#数据库字符集
+collation-server = utf8_general_ci
+
+* 用acl来让mysql用户对/usr/local/mysql有所有权限
+
+#setfacl –m u:mysql:rwx –R /usr/local/mysql
+#setfacl –m d:u:mysql:rwx –R /usr/local/mysql
+
+#/usr/local/mysql/bin/mysql_install_db --user=mysql
+* 创建数据库授权表
+
+启动MySQL
+/usr/local/mysql/bin/mysqld_safe --user=mysql &
+*ps -ef |grep mysql 查看是否启动
+
+#Vi /etc/rc.local
+加入
+/usr/local/mysql/bin/mysqld_safe --user=mysql &>/dev/null &
+
+设置mysql密码
+#/usr/local/mysql/bin/mysqladmin -uroot password 123456
+
