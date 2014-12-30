@@ -51,7 +51,7 @@ FROM
 		FROM
 			Score
 		WHERE
-			`Score`.`CouId` = 4
+			`Score`.`CoId` = 4
 	) n,
 	Student s,
 	Course C
